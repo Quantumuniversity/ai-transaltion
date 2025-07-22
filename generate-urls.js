@@ -213,7 +213,7 @@ async function processCourse(courseName) {
           const baseUrl = isProduction 
             ? process.env.VERCEL_URL 
               ? `https://${process.env.VERCEL_URL}` 
-              : 'https://your-app-name.vercel.app'
+              : 'https://ai-transaltion.vercel.app'
             : 'http://localhost:3001';
           
           // Generate URLs for all VTT files

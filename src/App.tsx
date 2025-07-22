@@ -29,6 +29,8 @@ function App() {
     setLoadingProgress(0);
 
     try {
+      console.log('🔄 Starting to load courses...');
+      
       // Simulate progress for better UX
       const progressInterval = setInterval(() => {
         setLoadingProgress(prev => {
@@ -39,9 +41,11 @@ function App() {
 
       // Create S3 service instance
       const s3Service = new S3Service(awsConfig);
+      console.log('📡 S3Service created, fetching courses...');
       
       // Fetch courses from S3
       const fetchedCourses = await s3Service.getCourses();
+      console.log('✅ Courses fetched successfully:', fetchedCourses.length, 'courses');
       setCourses(fetchedCourses);
       
       // Complete progress
@@ -50,8 +54,8 @@ function App() {
       
       console.log('Successfully loaded courses:', fetchedCourses);
     } catch (err) {
-      console.error('Error loading courses:', err);
-      setError('Failed to load courses. Please check your AWS credentials and try again.');
+      console.error('❌ Error loading courses:', err);
+      setError(`Failed to load courses: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
       // Reset progress after a short delay
