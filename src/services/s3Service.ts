@@ -7,8 +7,12 @@ export class S3Service {
   constructor(config: AWSConfig) {
     console.log('S3Service initialized with API endpoint approach');
     
-    // Use environment variable for API endpoint or default to local server
-    this.apiEndpoint = process.env.REACT_APP_API_ENDPOINT || 'http://localhost:3001/api';
+    // Use environment variable for API endpoint or default to current domain
+    const isProduction = process.env.NODE_ENV === 'production';
+    this.apiEndpoint = process.env.REACT_APP_API_ENDPOINT || 
+      (isProduction ? '/api' : 'http://localhost:3001/api');
+    
+    console.log('🌐 API Endpoint:', this.apiEndpoint);
   }
 
   // Get all courses from S3 bucket via API
