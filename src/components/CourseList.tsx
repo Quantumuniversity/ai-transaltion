@@ -143,8 +143,8 @@ export const CourseList: React.FC<CourseListProps> = ({ courses, onLogout }) => 
                                   <Subtitles className="w-3 h-3" />
                                   <span>
                                     {Object.keys(video.vttUrls).length === 1 
-                                      ? 'VTT' 
-                                      : `${Object.keys(video.vttUrls).length} VTT`
+                                      ? Object.keys(video.vttUrls)[0].toUpperCase()
+                                      : Object.keys(video.vttUrls).map(lang => lang.toUpperCase()).join(', ')
                                     }
                                   </span>
                                 </div>
@@ -155,8 +155,8 @@ export const CourseList: React.FC<CourseListProps> = ({ courses, onLogout }) => 
                                   <Subtitles className="w-3 h-3" />
                                   <span>
                                     {Object.keys(video.srtUrls).length === 1 
-                                      ? 'SRT' 
-                                      : `${Object.keys(video.srtUrls).length} SRT`
+                                      ? Object.keys(video.srtUrls)[0].toUpperCase()
+                                      : Object.keys(video.srtUrls).map(lang => lang.toUpperCase()).join(', ')
                                     }
                                   </span>
                                 </div>
