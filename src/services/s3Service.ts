@@ -1,4 +1,4 @@
-import { Course, Video, AWSConfig } from '../types';
+import { Course, AWSConfig } from '../types';
 
 // AWS S3 Service Class using server-side API endpoints
 export class S3Service {
@@ -61,13 +61,8 @@ export class S3Service {
 
   // Get transcript content from TXT file via API
   private async getTranscript(key: string): Promise<string> {
-    try {
-      // For transcripts, we'll get the content directly from the courses API
-      // since it's already included in the course data
-      return '';
-    } catch (error) {
-      console.error(`Error fetching transcript for ${key}:`, error);
-      return '';
-    }
+    // For transcripts, we'll get the content directly from the courses API
+    // since it's already included in the course data
+    return '';
   }
 } 

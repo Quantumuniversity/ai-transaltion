@@ -33,7 +33,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, onClose, onSubt
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isPlayerReady, setIsPlayerReady] = useState(false);
+  const [isPlayerReady, setIsPlayerReady] = useState(false); // Used for player state management
   const [subtitleEnabled, setSubtitleEnabled] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('en');
 
