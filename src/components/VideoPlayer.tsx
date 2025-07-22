@@ -253,7 +253,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, onClose, onSubt
       className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
       onClick={handleBackdropClick}
     >
-      <div className="relative w-full max-w-6xl bg-black rounded-lg overflow-hidden">
+      <div className="relative w-full max-w-4xl mx-auto bg-black rounded-lg overflow-hidden shadow-2xl" style={{ maxHeight: '90vh' }}>
         {/* Header */}
         <div className="absolute top-4 left-4 right-4 z-10 flex justify-between items-center">
           <h2 className="text-white text-lg font-semibold bg-black bg-opacity-50 px-3 py-1 rounded">
@@ -326,7 +326,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, onClose, onSubt
         </div>
 
         {/* Video Container */}
-        <div className="relative">
+        <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
               <div className="text-center">
