@@ -14,7 +14,8 @@ interface CourseListProps {
 export const CourseList: React.FC<CourseListProps> = ({ courses, onLogout }) => {
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
-  const [subtitleEnabled, setSubtitleEnabled] = useState(false); // Used in VideoPlayer component
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [subtitleEnabled, setSubtitleEnabled] = useState(false);
 
   const toggleCourse = (courseName: string) => {
     const newExpanded = new Set(expandedCourses);
