@@ -17,6 +17,20 @@ export const CourseList: React.FC<CourseListProps> = ({ courses, onLogout }) => 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [subtitleEnabled, setSubtitleEnabled] = useState(false);
 
+  // Helper function to get all available languages for a course
+  const getCourseLanguages = (course: Course) => {
+    const languages = new Set<string>();
+    
+    course.videos.forEach(video => {
+      // Add VTT languages
+      Object.keys(video.vttUrls || {}).forEach(lang => languages.add(lang));
+      // Add SRT languages
+      Object.keys(video.srtUrls || {}).forEach(lang => languages.add(lang));
+    });
+    
+    return Array.from(languages).sort();
+  };
+
   const toggleCourse = (courseName: string) => {
     const newExpanded = new Set(expandedCourses);
     if (newExpanded.has(courseName)) {
@@ -102,6 +116,27 @@ export const CourseList: React.FC<CourseListProps> = ({ courses, onLogout }) => 
                           Click to expand
                         </span>
                       </div>
+                      
+                      {/* Course Language Tags */}
+                      {(() => {
+                        const courseLanguages = getCourseLanguages(course);
+                        if (courseLanguages.length > 0) {
+                          return (
+                            <div className="flex flex-wrap gap-2 mt-3">
+                              <span className="text-gray-600 text-xs font-medium">Languages:</span>
+                              {courseLanguages.map(lang => (
+                                <span 
+                                  key={lang}
+                                  className="bg-gradient-to-r from-green-400 to-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium"
+                                >
+                                  {lang.toUpperCase()}
+                                </span>
+                              ))}
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                   </div>
                 </div>
