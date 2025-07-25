@@ -328,11 +328,17 @@ async function getCourseDetailsOptimized(courseName) {
           // Queue URL generation promises
           const videoUrlPromise = generateSignedUrl(files.video).then(url => video.videoUrl = url);
           
-                // Generate URLs for all VTT files
+                // Get the base URL for API endpoints
+          const isProduction = process.env.NODE_ENV === 'production';
+          const baseUrl = isProduction 
+            ? (process.env.VERCEL_URL || 'https://ai-transaltion.vercel.app')
+            : (process.env.API_BASE_URL || 'http://localhost:3001');
+          
+          // Generate URLs for all VTT files
           const vttUrlPromises = Object.entries(files.vtt).map(([langCode, filePath]) => {
             return Promise.resolve().then(() => {
               const fileName = filePath.split('/').pop();
-              video.vttUrls[langCode] = `http://localhost:3001/api/vtt/${courseName}/${fileName}`;
+              video.vttUrls[langCode] = `${baseUrl}/api/vtt/${courseName}/${fileName}`;
               video.availableLanguages.push(langCode);
             });
           });
@@ -341,7 +347,7 @@ async function getCourseDetailsOptimized(courseName) {
           const srtUrlPromises = Object.entries(files.srt).map(([langCode, filePath]) => {
             return Promise.resolve().then(() => {
               const fileName = filePath.split('/').pop();
-              video.srtUrls[langCode] = `http://localhost:3001/api/srt/${courseName}/${fileName}`;
+              video.srtUrls[langCode] = `${baseUrl}/api/srt/${courseName}/${fileName}`;
               video.availableLanguages.push(langCode);
             });
           });
