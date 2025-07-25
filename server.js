@@ -331,7 +331,7 @@ async function getCourseDetailsOptimized(courseName) {
                 // Get the base URL for API endpoints
           const isProduction = process.env.NODE_ENV === 'production';
           const baseUrl = isProduction 
-            ? (process.env.VERCEL_URL || 'https://ai-transaltion.vercel.app')
+            ? 'https://ai-transaltion.vercel.app'
             : (process.env.API_BASE_URL || 'http://localhost:3001');
           
           // Generate URLs for all VTT files (server proxy)
