@@ -33,6 +33,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, onClose, onSubt
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isPlayerReady, setIsPlayerReady] = useState(false);
   const [subtitleEnabled, setSubtitleEnabled] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('en');
@@ -140,7 +141,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, onClose, onSubt
         }
       }
     }, 100); // Small delay to ensure DOM is ready
-  }, [video, cleanupPlayer]);
+  }, [video, cleanupPlayer, addSubtitleTracks]);
 
   // Function to add subtitle tracks after video is loaded
   const addSubtitleTracks = useCallback((player: any) => {
