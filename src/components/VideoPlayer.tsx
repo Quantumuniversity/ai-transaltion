@@ -53,6 +53,68 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, onClose, onSubt
     }
   }, []);
 
+  // Function to add subtitle tracks after video is loaded
+  const addSubtitleTracks = useCallback((player: any) => {
+    try {
+      console.log('Adding subtitle tracks...');
+      
+      // Create tracks array for all available languages (VTT and SRT)
+      const tracks: Array<{
+        src: string;
+        kind: string;
+        srclang: string;
+        label: string;
+        default: boolean;
+      }> = [];
+      
+      // Add VTT tracks
+      Object.entries(video.vttUrls || {}).forEach(([langCode, url]) => {
+        tracks.push({
+          src: url,
+          kind: 'subtitles',
+          srclang: langCode,
+          label: `${LANGUAGE_NAMES[langCode] || langCode} (VTT)`,
+          default: langCode === 'en' && tracks.length === 0 // Default to English if first track
+        });
+      });
+      
+      // Add SRT tracks (converted to VTT format by server)
+      Object.entries(video.srtUrls || {}).forEach(([langCode, url]) => {
+        tracks.push({
+          src: url,
+          kind: 'subtitles',
+          srclang: langCode,
+          label: `${LANGUAGE_NAMES[langCode] || langCode} (SRT)`,
+          default: langCode === 'en' && tracks.length === 0 // Default to English if first track
+        });
+      });
+
+      // Add tracks one by one with error handling
+      tracks.forEach((track, index) => {
+        try {
+          const textTrack = player.addRemoteTextTrack(track, false);
+          console.log(`Added subtitle track: ${track.label}`);
+          
+          // Handle track loading errors
+          textTrack.addEventListener('error', (e: any) => {
+            console.warn(`Subtitle track failed to load: ${track.label}`, e);
+            setSubtitleError(`Subtitle track "${track.label}" failed to load. Video will continue without subtitles.`);
+          });
+          
+        } catch (trackError) {
+          console.warn(`Failed to add subtitle track: ${track.label}`, trackError);
+          setSubtitleError(`Failed to add subtitle track "${track.label}". Video will continue without subtitles.`);
+        }
+      });
+
+      console.log('Player tracks after adding:', player.textTracks());
+      
+    } catch (error) {
+      console.warn('Error adding subtitle tracks:', error);
+      setSubtitleError('Failed to load subtitle tracks. Video will continue without subtitles.');
+    }
+  }, [video]);
+
   // Initialize video player
   const initializePlayer = useCallback(() => {
     // Clean up any existing player first
@@ -142,68 +204,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, onClose, onSubt
       }
     }, 100); // Small delay to ensure DOM is ready
   }, [video, cleanupPlayer, addSubtitleTracks]);
-
-  // Function to add subtitle tracks after video is loaded
-  const addSubtitleTracks = useCallback((player: any) => {
-    try {
-      console.log('Adding subtitle tracks...');
-      
-      // Create tracks array for all available languages (VTT and SRT)
-      const tracks: Array<{
-        src: string;
-        kind: string;
-        srclang: string;
-        label: string;
-        default: boolean;
-      }> = [];
-      
-      // Add VTT tracks
-      Object.entries(video.vttUrls || {}).forEach(([langCode, url]) => {
-        tracks.push({
-          src: url,
-          kind: 'subtitles',
-          srclang: langCode,
-          label: `${LANGUAGE_NAMES[langCode] || langCode} (VTT)`,
-          default: langCode === 'en' && tracks.length === 0 // Default to English if first track
-        });
-      });
-      
-      // Add SRT tracks (converted to VTT format by server)
-      Object.entries(video.srtUrls || {}).forEach(([langCode, url]) => {
-        tracks.push({
-          src: url,
-          kind: 'subtitles',
-          srclang: langCode,
-          label: `${LANGUAGE_NAMES[langCode] || langCode} (SRT)`,
-          default: langCode === 'en' && tracks.length === 0 // Default to English if first track
-        });
-      });
-
-      // Add tracks one by one with error handling
-      tracks.forEach((track, index) => {
-        try {
-          const textTrack = player.addRemoteTextTrack(track, false);
-          console.log(`Added subtitle track: ${track.label}`);
-          
-          // Handle track loading errors
-          textTrack.addEventListener('error', (e: any) => {
-            console.warn(`Subtitle track failed to load: ${track.label}`, e);
-            setSubtitleError(`Subtitle track "${track.label}" failed to load. Video will continue without subtitles.`);
-          });
-          
-        } catch (trackError) {
-          console.warn(`Failed to add subtitle track: ${track.label}`, trackError);
-          setSubtitleError(`Failed to add subtitle track "${track.label}". Video will continue without subtitles.`);
-        }
-      });
-
-      console.log('Player tracks after adding:', player.textTracks());
-      
-    } catch (error) {
-      console.warn('Error adding subtitle tracks:', error);
-      setSubtitleError('Failed to load subtitle tracks. Video will continue without subtitles.');
-    }
-  }, [video]);
 
   useEffect(() => {
     // Initialize player when component mounts or video changes
