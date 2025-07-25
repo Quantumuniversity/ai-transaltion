@@ -33,10 +33,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, onClose, onSubt
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isPlayerReady, setIsPlayerReady] = useState(false);
   const [subtitleEnabled, setSubtitleEnabled] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [subtitleError, setSubtitleError] = useState<string | null>(null);
 
   // Cleanup function to properly dispose of the video player
   const cleanupPlayer = useCallback(() => {
@@ -63,37 +63,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, onClose, onSubt
         try {
           console.log('VideoPlayer: Initializing with video:', video);
           
-          // Create tracks array for all available languages (VTT and SRT)
-          const tracks: Array<{
-            src: string;
-            kind: string;
-            srclang: string;
-            label: string;
-            default: boolean;
-          }> = [];
-          
-          // Add VTT tracks
-          Object.entries(video.vttUrls || {}).forEach(([langCode, url]) => {
-            tracks.push({
-              src: url,
-              kind: 'subtitles',
-              srclang: langCode,
-              label: `${LANGUAGE_NAMES[langCode] || langCode} (VTT)`,
-              default: langCode === 'en' && tracks.length === 0 // Default to English if first track
-            });
-          });
-          
-          // Add SRT tracks (converted to VTT format by server)
-          Object.entries(video.srtUrls || {}).forEach(([langCode, url]) => {
-            tracks.push({
-              src: url,
-              kind: 'subtitles',
-              srclang: langCode,
-              label: `${LANGUAGE_NAMES[langCode] || langCode} (SRT)`,
-              default: langCode === 'en' && tracks.length === 0 // Default to English if first track
-            });
-          });
-
+          // Create player WITHOUT tracks first to ensure video loads
           const player = videojs(videoRef.current, {
             controls: true,
             fluid: true,
@@ -102,8 +72,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, onClose, onSubt
             sources: [{
               src: video.videoUrl,
               type: 'video/mp4'
-            }],
-            tracks: tracks
+            }]
           });
 
           playerRef.current = player;
@@ -112,7 +81,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, onClose, onSubt
           console.log('Video VTT URLs:', video.vttUrls);
           console.log('Video SRT URLs (converted to VTT):', video.srtUrls);
           console.log('Available languages:', video.availableLanguages);
-          console.log('Player tracks:', player.textTracks());
           
           // Backward compatibility: if vttUrls doesn't exist, check for old vttUrl
           if (!video.vttUrls && (video as any).vttUrl) {
@@ -124,10 +92,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, onClose, onSubt
           // Handle player events
           player.on('loadeddata', () => {
             console.log('Video loaded successfully');
-            console.log('Available text tracks:', player.textTracks());
             setIsLoading(false);
             setError(null);
             setIsPlayerReady(true);
+            
+            // Now try to add subtitle tracks AFTER video is loaded
+            addSubtitleTracks(player);
           });
 
           player.on('error', (e: any) => {
@@ -171,6 +141,68 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, onClose, onSubt
       }
     }, 100); // Small delay to ensure DOM is ready
   }, [video, cleanupPlayer]);
+
+  // Function to add subtitle tracks after video is loaded
+  const addSubtitleTracks = useCallback((player: any) => {
+    try {
+      console.log('Adding subtitle tracks...');
+      
+      // Create tracks array for all available languages (VTT and SRT)
+      const tracks: Array<{
+        src: string;
+        kind: string;
+        srclang: string;
+        label: string;
+        default: boolean;
+      }> = [];
+      
+      // Add VTT tracks
+      Object.entries(video.vttUrls || {}).forEach(([langCode, url]) => {
+        tracks.push({
+          src: url,
+          kind: 'subtitles',
+          srclang: langCode,
+          label: `${LANGUAGE_NAMES[langCode] || langCode} (VTT)`,
+          default: langCode === 'en' && tracks.length === 0 // Default to English if first track
+        });
+      });
+      
+      // Add SRT tracks (converted to VTT format by server)
+      Object.entries(video.srtUrls || {}).forEach(([langCode, url]) => {
+        tracks.push({
+          src: url,
+          kind: 'subtitles',
+          srclang: langCode,
+          label: `${LANGUAGE_NAMES[langCode] || langCode} (SRT)`,
+          default: langCode === 'en' && tracks.length === 0 // Default to English if first track
+        });
+      });
+
+      // Add tracks one by one with error handling
+      tracks.forEach((track, index) => {
+        try {
+          const textTrack = player.addRemoteTextTrack(track, false);
+          console.log(`Added subtitle track: ${track.label}`);
+          
+          // Handle track loading errors
+          textTrack.addEventListener('error', (e: any) => {
+            console.warn(`Subtitle track failed to load: ${track.label}`, e);
+            setSubtitleError(`Subtitle track "${track.label}" failed to load. Video will continue without subtitles.`);
+          });
+          
+        } catch (trackError) {
+          console.warn(`Failed to add subtitle track: ${track.label}`, trackError);
+          setSubtitleError(`Failed to add subtitle track "${track.label}". Video will continue without subtitles.`);
+        }
+      });
+
+      console.log('Player tracks after adding:', player.textTracks());
+      
+    } catch (error) {
+      console.warn('Error adding subtitle tracks:', error);
+      setSubtitleError('Failed to load subtitle tracks. Video will continue without subtitles.');
+    }
+  }, [video]);
 
   useEffect(() => {
     // Initialize player when component mounts or video changes
@@ -244,6 +276,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, onClose, onSubt
 
   const retryVideo = () => {
     setError(null);
+    setSubtitleError(null);
     setIsLoading(true);
     initializePlayer();
   };
@@ -262,16 +295,16 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, onClose, onSubt
           
           <div className="flex items-center space-x-2">
             {/* Subtitle Controls */}
-            {Object.keys(video.vttUrls || {}).length > 0 && (
+            {(Object.keys(video.vttUrls || {}).length > 0 || Object.keys(video.srtUrls || {}).length > 0) && (
               <div className="flex items-center space-x-2">
                 {/* Language Selector */}
-                {Object.keys(video.vttUrls || {}).length > 1 && (
+                {Object.keys({ ...video.vttUrls, ...video.srtUrls }).length > 1 && (
                   <select
                     value={selectedLanguage}
                     onChange={(e) => changeSubtitleLanguage(e.target.value)}
                     className="bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm border border-white/20"
                   >
-                    {Object.entries(video.vttUrls || {}).map(([langCode, url]) => (
+                    {Object.entries({ ...video.vttUrls, ...video.srtUrls }).map(([langCode, url]) => (
                       <option key={langCode} value={langCode}>
                         {LANGUAGE_NAMES[langCode] || langCode}
                       </option>
@@ -347,6 +380,16 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, onClose, onSubt
                 >
                   Retry
                 </button>
+              </div>
+            </div>
+          )}
+          
+          {/* Subtitle Error Warning */}
+          {subtitleError && !error && (
+            <div className="absolute top-4 right-4 bg-yellow-600 bg-opacity-90 text-white px-3 py-2 rounded text-sm max-w-xs">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{subtitleError}</span>
               </div>
             </div>
           )}
