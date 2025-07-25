@@ -214,15 +214,17 @@ async function processCourse(courseName) {
             ? (process.env.VERCEL_URL || 'https://ai-transaltion.vercel.app')
             : (process.env.API_BASE_URL || 'http://localhost:3001');
           
-          // Generate URLs for all VTT files (direct S3 URLs)
+          // Generate URLs for all VTT files (server proxy)
           for (const [langCode, filePath] of Object.entries(files.vtt)) {
-            video.vttUrls[langCode] = await generateSignedUrl(filePath);
+            const fileName = filePath.split('/').pop();
+            video.vttUrls[langCode] = `${baseUrl}/api/vtt/${courseName}/${fileName}`;
             video.availableLanguages.push(langCode);
           }
           
-          // Generate URLs for all SRT files (direct S3 URLs)
+          // Generate URLs for all SRT files (server proxy)
           for (const [langCode, filePath] of Object.entries(files.srt)) {
-            video.srtUrls[langCode] = await generateSignedUrl(filePath);
+            const fileName = filePath.split('/').pop();
+            video.srtUrls[langCode] = `${baseUrl}/api/srt/${courseName}/${fileName}`;
             video.availableLanguages.push(langCode);
           }
           
