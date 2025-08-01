@@ -96,7 +96,7 @@ function getSubtitleType(folderName) {
 }
 
 // Helper function to generate signed URL with caching
-async function generateSignedUrl(objectKey, expirationInSeconds = 3600) {
+async function generateSignedUrl(objectKey, expirationInSeconds = 5184000) { // 2 months (60 days)
   const cacheKey = `${objectKey}-${expirationInSeconds}`;
   
   // Check URL cache first

@@ -48,7 +48,7 @@ function getSubtitleType(folderName) {
 }
 
 // Generate signed URL
-function generateSignedUrl(objectKey, expirationInSeconds = 86400) { // 24 hours
+function generateSignedUrl(objectKey, expirationInSeconds = 5184000) { // 2 months (60 days)
   const params = {
     Bucket: bucketName,
     Key: objectKey,
